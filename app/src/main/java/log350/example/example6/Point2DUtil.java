@@ -359,6 +359,32 @@ public class Point2DUtil {
 		return true;
 	}
 
+	// Translate points of the shape relatively to the translation of one finger on the shape
+	static public void translatePointsBasedOnDisplacementOfOnepoint(
+		ArrayList<Point2D> points,
+		// these should, of course, be in the same coordinate system as the points to transform
+		Point2D P_old,
+		Point2D P_new
+	) {
+		Point2D centroid = computeCentroidOfPoints(points);
+		Vector2D v1 = Point2D.diff(P_old, centroid);
+		Vector2D v2 = Point2D.diff(P_new, centroid);
+
+		float lengthToPreserve = v1.length();
+		Point2D newCentroid = Point2D.sum(
+				P_new,
+				Vector2D.mult(v2.normalized(), -lengthToPreserve)
+		);
+		Vector2D translation = Point2D.diff(newCentroid, centroid);
+
+		for (Point2D p : points) {
+			float relativeX = p.x() - centroid.x();
+			float relativeY = p.y() - centroid.y();
+			p.get()[0] = relativeX + translation.x() + centroid.x();
+			p.get()[1] = relativeY + translation.y() + centroid.y();
+		}
+	}
+
 	// Imagine a sheet of paper on a horizontal surface,
 	// and imagine the user places a finger tip on the sheet of paper
 	// and then drags their finger.

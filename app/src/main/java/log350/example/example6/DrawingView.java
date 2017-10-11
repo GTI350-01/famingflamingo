@@ -368,115 +368,120 @@ public class DrawingView extends View {
 					}
 					
 					switch ( currentMode ) {
-					case MODE_NEUTRAL :
-						if ( cursorContainer.getNumCursors() == 1 && type == MotionEvent.ACTION_DOWN ) {
-							Point2D p_pixels = new Point2D(x,y);
-							Point2D p_world = gw.convertPixelsToWorldSpaceUnits( p_pixels );
-							indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint( p_world );
-							if ( lassoButton.contains(p_pixels) ) {
-								currentMode = MODE_LASSO;
-								cursor.setType( MyCursor.TYPE_BUTTON );
-							}
-							else if(createButton.contains(p_pixels)){
-								currentMode = MODE_CREATE;
-								cursor.setType(MyCursor.TYPE_BUTTON);
-							}
-							else if ( indexOfShapeBeingManipulated >= 0 ) {
-								currentMode = MODE_SHAPE_MANIPULATION;
-								cursor.setType( MyCursor.TYPE_DRAGGING );
-							}
-							else {
-								currentMode = MODE_CAMERA_MANIPULATION;
-								cursor.setType( MyCursor.TYPE_DRAGGING );
-							}
-						}
-						break;
-					case MODE_CAMERA_MANIPULATION :
-						if ( cursorContainer.getNumCursors() == 2 && type == MotionEvent.ACTION_MOVE ) {
-							MyCursor cursor0 = cursorContainer.getCursorByIndex( 0 );
-							MyCursor cursor1 = cursorContainer.getCursorByIndex( 1 );
-							// MyCursor otherCursor = ( cursor == cursor0 ) ? cursor1 : cursor0;
-							gw.panAndZoomBasedOnDisplacementOfTwoPoints(
-								cursor0.getPreviousPosition(),
-								cursor1.getPreviousPosition(),
-								cursor0.getCurrentPosition(),
-								cursor1.getCurrentPosition()
-							);
-						}
-						else if ( type == MotionEvent.ACTION_UP ) {
-							cursorContainer.removeCursorByIndex( cursorIndex );
-							if ( cursorContainer.getNumCursors() == 0 )
-								currentMode = MODE_NEUTRAL;
-						}
-						break;
-					case MODE_SHAPE_MANIPULATION :
-						if ( cursorContainer.getNumCursors() == 2 && type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated>=0 ) {
-							MyCursor cursor0 = cursorContainer.getCursorByIndex( 0 );
-							MyCursor cursor1 = cursorContainer.getCursorByIndex( 1 );
-							Shape shape = shapeContainer.getShape( indexOfShapeBeingManipulated );
-
-							Point2DUtil.transformPointsBasedOnDisplacementOfTwoPoints(
-								shape.getPoints(),
-								gw.convertPixelsToWorldSpaceUnits( cursor0.getPreviousPosition() ),
-								gw.convertPixelsToWorldSpaceUnits( cursor1.getPreviousPosition() ),
-								gw.convertPixelsToWorldSpaceUnits( cursor0.getCurrentPosition() ),
-								gw.convertPixelsToWorldSpaceUnits( cursor1.getCurrentPosition() )
-							);
-						}
-						else if ( type == MotionEvent.ACTION_UP ) {
-							cursorContainer.removeCursorByIndex( cursorIndex );
-							if ( cursorContainer.getNumCursors() == 0 ) {
-								currentMode = MODE_NEUTRAL;
-								indexOfShapeBeingManipulated = -1;
-							}
-						}
-						break;
-					case MODE_LASSO :
-						if ( type == MotionEvent.ACTION_DOWN ) {
-							if ( cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_DRAGGING) == 1 )
-								// there's already a finger dragging out the lasso
-								cursor.setType(MyCursor.TYPE_IGNORE);
-							else
-								cursor.setType(MyCursor.TYPE_DRAGGING);
-						}
-						else if ( type == MotionEvent.ACTION_MOVE ) {
-							// no further updating necessary here
-						}
-						else if ( type == MotionEvent.ACTION_UP ) {
-							if ( cursor.getType() == MyCursor.TYPE_DRAGGING ) {
-								// complete a lasso selection
-								selectedShapes.clear();
-
-								// Need to transform the positions of the cursor from pixels to world space coordinates.
-								// We will store the world space coordinates in the following data structure.
-								ArrayList< Point2D > lassoPolygonPoints = new ArrayList< Point2D >();
-								for ( Point2D p : cursor.getPositions() )
-									lassoPolygonPoints.add( gw.convertPixelsToWorldSpaceUnits( p ) );
-
-								for ( Shape s : shapeContainer.shapes ) {
-									if ( s.isContainedInLassoPolygon( lassoPolygonPoints ) ) {
-										selectedShapes.add( s );
-									}
+						case MODE_NEUTRAL:
+							if (cursorContainer.getNumCursors() == 1 && type == MotionEvent.ACTION_DOWN) {
+								Point2D p_pixels = new Point2D(x, y);
+								Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
+								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+								if (lassoButton.contains(p_pixels)) {
+									currentMode = MODE_LASSO;
+									cursor.setType(MyCursor.TYPE_BUTTON);
+								} else if (createButton.contains(p_pixels)) {
+									currentMode = MODE_CREATE;
+									cursor.setType(MyCursor.TYPE_BUTTON);
+								} else if (indexOfShapeBeingManipulated >= 0) {
+									currentMode = MODE_SHAPE_MANIPULATION;
+									cursor.setType(MyCursor.TYPE_DRAGGING);
+								} else {
+									currentMode = MODE_CAMERA_MANIPULATION;
+									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
 							}
-							cursorContainer.removeCursorByIndex( cursorIndex );
-							if ( cursorContainer.getNumCursors() == 0 ) {
-								currentMode = MODE_NEUTRAL;
+							break;
+						case MODE_CAMERA_MANIPULATION:
+							if (cursorContainer.getNumCursors() == 2 && type == MotionEvent.ACTION_MOVE) {
+								MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
+								MyCursor cursor1 = cursorContainer.getCursorByIndex(1);
+								// MyCursor otherCursor = ( cursor == cursor0 ) ? cursor1 : cursor0;
+								gw.panAndZoomBasedOnDisplacementOfTwoPoints(
+										cursor0.getPreviousPosition(),
+										cursor1.getPreviousPosition(),
+										cursor0.getCurrentPosition(),
+										cursor1.getCurrentPosition()
+								);
+							} else if (type == MotionEvent.ACTION_UP) {
+								cursorContainer.removeCursorByIndex(cursorIndex);
+								if (cursorContainer.getNumCursors() == 0)
+									currentMode = MODE_NEUTRAL;
 							}
-						}
-						break;
-						case MODE_CREATE :
-							if(type == MotionEvent.ACTION_DOWN){
+							break;
+						case MODE_SHAPE_MANIPULATION:
+							if (type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated >= 0) {
+
+								Shape shape = shapeContainer.getShape(indexOfShapeBeingManipulated);
+
+								// translation of the shape with one finger
+								if (cursorContainer.getNumCursors() == 1) {
+									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
+
+									Point2DUtil.translatePointsBasedOnDisplacementOfOnepoint(
+											shape.getPoints(),
+											cursor0.getPreviousPosition(),
+											cursor0.getCurrentPosition()
+									);
+								} else if (cursorContainer.getNumCursors() == 2) { // transformation of the shape with 2 fingers
+									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
+									MyCursor cursor1 = cursorContainer.getCursorByIndex(1);
+
+									Point2DUtil.transformPointsBasedOnDisplacementOfTwoPoints(
+											shape.getPoints(),
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition()),
+											gw.convertPixelsToWorldSpaceUnits(cursor1.getPreviousPosition()),
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition()),
+											gw.convertPixelsToWorldSpaceUnits(cursor1.getCurrentPosition())
+									);
+								}
+							} else if (type == MotionEvent.ACTION_UP) {
+								cursorContainer.removeCursorByIndex(cursorIndex);
+								if (cursorContainer.getNumCursors() == 0) {
+									currentMode = MODE_NEUTRAL;
+									indexOfShapeBeingManipulated = -1;
+								}
+							}
+							break;
+						case MODE_LASSO:
+							if (type == MotionEvent.ACTION_DOWN) {
+								if (cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_DRAGGING) == 1)
+									// there's already a finger dragging out the lasso
+									cursor.setType(MyCursor.TYPE_IGNORE);
+								else
+									cursor.setType(MyCursor.TYPE_DRAGGING);
+							} else if (type == MotionEvent.ACTION_MOVE) {
+								// no further updating necessary here
+							} else if (type == MotionEvent.ACTION_UP) {
+								if (cursor.getType() == MyCursor.TYPE_DRAGGING) {
+									// complete a lasso selection
+									selectedShapes.clear();
+
+									// Need to transform the positions of the cursor from pixels to world space coordinates.
+									// We will store the world space coordinates in the following data structure.
+									ArrayList<Point2D> lassoPolygonPoints = new ArrayList<Point2D>();
+									for (Point2D p : cursor.getPositions())
+										lassoPolygonPoints.add(gw.convertPixelsToWorldSpaceUnits(p));
+
+									for (Shape s : shapeContainer.shapes) {
+										if (s.isContainedInLassoPolygon(lassoPolygonPoints)) {
+											selectedShapes.add(s);
+										}
+									}
+								}
+								cursorContainer.removeCursorByIndex(cursorIndex);
+								if (cursorContainer.getNumCursors() == 0) {
+									currentMode = MODE_NEUTRAL;
+								}
+							}
+							break;
+						case MODE_CREATE:
+							if (type == MotionEvent.ACTION_DOWN) {
 
 								cursor.setType(MyCursor.TYPE_CREATE);
 
 								Log.d("NUMBER OF POINTS", String.valueOf(cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_CREATE)));
 
-							}
-							else if ( type == MotionEvent.ACTION_UP) {
+							} else if (type == MotionEvent.ACTION_UP) {
 
 
-								if(cursorContainer.getNumCursors() >= 3) {
+								if (cursorContainer.getNumCursors() >= 3) {
 
 									Log.d("CREATE", "DRAW SHAPE");
 
@@ -497,11 +502,9 @@ public class DrawingView extends View {
 
 								}
 
-								if ( cursorContainer.getNumCursors() == 0 ){
+								if (cursorContainer.getNumCursors() == 0) {
 									currentMode = MODE_NEUTRAL;
 								}
-
-
 							}
 					}
 
