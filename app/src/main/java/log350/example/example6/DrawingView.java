@@ -199,8 +199,9 @@ public class DrawingView extends View {
 	static final int MODE_NEUTRAL = 0; // the default mode
 	static final int MODE_CAMERA_MANIPULATION = 1; // the user is panning/zooming the camera
 	static final int MODE_SHAPE_MANIPULATION = 2; // the user is translating/rotating/scaling a shape
-	static final int MODE_LASSO = 3; // the user is drawing a lasso to select shapes
-	static final int MODE_CREATE = 4;
+    static final int MODE_POLYGON_MANIPULATION = 3; // the user is translating/rotating/scaling a shape
+	static final int MODE_LASSO = 4; // the user is drawing a lasso to select shapes
+	static final int MODE_CREATE = 5;
 	int currentMode = MODE_NEUTRAL;
 
 	// This is only used when currentMode==MODE_SHAPE_MANIPULATION, otherwise it is equal to -1
@@ -210,8 +211,9 @@ public class DrawingView extends View {
 	MyButton createButton = new MyButton("Create", 10, 220, 140, 140);
 	
 	OnTouchListener touchListener;
-	
-	public DrawingView(Context context) {
+    ArrayList<Point2D> lassoPolygonPoints;
+
+    public DrawingView(Context context) {
 		super(context);
 		
 		setFocusable(true);
@@ -373,16 +375,26 @@ public class DrawingView extends View {
 								Point2D p_pixels = new Point2D(x, y);
 								Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
 								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+
+                                //Get polygon points
+
 								if (lassoButton.contains(p_pixels)) {
 									currentMode = MODE_LASSO;
 									cursor.setType(MyCursor.TYPE_BUTTON);
 								} else if (createButton.contains(p_pixels)) {
 									currentMode = MODE_CREATE;
 									cursor.setType(MyCursor.TYPE_BUTTON);
-								} else if (indexOfShapeBeingManipulated >= 0) {
+								}
+								else if (indexOfShapeBeingManipulated >= 0) {
 									currentMode = MODE_SHAPE_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
-								} else {
+								}
+								else if(lassoPolygonPoints != null && Point2DUtil.isPointInsidePolygon(lassoPolygonPoints, p_world)){
+
+                                    currentMode = MODE_POLYGON_MANIPULATION;
+                                    cursor.setType(MyCursor.TYPE_DRAGGING);
+                                }
+								else {
 									currentMode = MODE_CAMERA_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
@@ -449,6 +461,20 @@ public class DrawingView extends View {
 								}
 							}
 							break;
+                        case MODE_POLYGON_MANIPULATION:
+
+                            Log.d("POLYGON", "INSIDE");
+
+                            //Move all shapes that are in the polygon (selectedShapes)
+
+
+                            cursorContainer.removeAllCursors();
+
+                            if (cursorContainer.getNumCursors() == 0) {
+                                currentMode = MODE_NEUTRAL;
+                            }
+
+                            break;
 						case MODE_LASSO:
 							if (type == MotionEvent.ACTION_DOWN) {
 								if (cursorContainer.getNumCursorsOfGivenType(MyCursor.TYPE_DRAGGING) == 1)
@@ -465,7 +491,7 @@ public class DrawingView extends View {
 
 									// Need to transform the positions of the cursor from pixels to world space coordinates.
 									// We will store the world space coordinates in the following data structure.
-									ArrayList<Point2D> lassoPolygonPoints = new ArrayList<Point2D>();
+									lassoPolygonPoints = new ArrayList<Point2D>();
 									for (Point2D p : cursor.getPositions())
 										lassoPolygonPoints.add(gw.convertPixelsToWorldSpaceUnits(p));
 
