@@ -88,6 +88,14 @@ class GraphicsWrapper {
 		zoomIn( zoomFactor, windowWidthInPixels * 0.5f, windowHeightInPixels * 0.5f );
 	}
 
+	public void panBasedOnDisplacementOfOnePoint(
+			Point2D P_old,
+			Point2D P_new
+	) {
+		Vector2D translation = Point2D.diff( P_new, P_old );
+		pan( translation.x(), translation.y() );
+	}
+
 	// This can be used to implement bimanual (2-handed) camera control,
 	// or 2-finger camera control, as in a "pinch" gesture
 	public void panAndZoomBasedOnDisplacementOfTwoPoints(
