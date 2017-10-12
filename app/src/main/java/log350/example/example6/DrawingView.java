@@ -482,7 +482,16 @@ public class DrawingView extends View {
 							}
 							break;
 						case MODE_CREATE:
+
 							if (type == MotionEvent.ACTION_DOWN) {
+
+								Point2D p_pixels = new Point2D(x, y);
+
+								if(createButton.contains(p_pixels) && cursorContainer.getNumCursors() <= 2){
+									currentMode = MODE_NEUTRAL;
+									cursorContainer.removeAllCursors();
+									break;
+								}
 
 								cursor.setType(MyCursor.TYPE_CREATE);
 
@@ -516,6 +525,8 @@ public class DrawingView extends View {
 									currentMode = MODE_NEUTRAL;
 								}
 							}
+
+							break;
 					}
 
 					v.invalidate();
