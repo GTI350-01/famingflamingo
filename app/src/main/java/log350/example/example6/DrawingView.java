@@ -416,8 +416,8 @@ public class DrawingView extends View {
 
 									Point2DUtil.translatePointsBasedOnDisplacementOfOnepoint(
 											shape.getPoints(),
-											cursor0.getPreviousPosition(),
-											cursor0.getCurrentPosition()
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition()),
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition())
 									);
 								} else if (cursorContainer.getNumCursors() == 2) { // transformation of the shape with 2 fingers
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);

@@ -366,22 +366,18 @@ public class Point2DUtil {
 		Point2D P_old,
 		Point2D P_new
 	) {
-		Point2D centroid = computeCentroidOfPoints(points);
-		Vector2D v1 = Point2D.diff(P_old, centroid);
-		Vector2D v2 = Point2D.diff(P_new, centroid);
+		Vector2D v = Point2D.diff(P_old, P_new);
 
-		float lengthToPreserve = v1.length();
-		Point2D newCentroid = Point2D.sum(
+		Point2D newPoint = Point2D.sum(
 				P_new,
-				Vector2D.mult(v2.normalized(), -lengthToPreserve)
+				v.normalized()
 		);
-		Vector2D translation = Point2D.diff(newCentroid, centroid);
+
+		Vector2D translation = Point2D.diff(newPoint, P_old);
 
 		for (Point2D p : points) {
-			float relativeX = p.x() - centroid.x();
-			float relativeY = p.y() - centroid.y();
-			p.get()[0] = relativeX + translation.x() + centroid.x();
-			p.get()[1] = relativeY + translation.y() + centroid.y();
+			p.get()[0] = p.x() + translation.x();
+			p.get()[1] = p.y() + translation.y();
 		}
 	}
 
