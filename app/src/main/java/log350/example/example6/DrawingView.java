@@ -390,7 +390,6 @@ public class DrawingView extends View {
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
 								else if(lassoPolygonPoints != null && Point2DUtil.isPointInsidePolygon(lassoPolygonPoints, p_world)){
-
                                     currentMode = MODE_POLYGON_MANIPULATION;
                                     cursor.setType(MyCursor.TYPE_DRAGGING);
                                 }
@@ -401,7 +400,7 @@ public class DrawingView extends View {
 							}
 							break;
 						case MODE_CAMERA_MANIPULATION:
-							if (type == MotionEvent.ACTION_MOVE) {
+							/*if (type == MotionEvent.ACTION_MOVE) {
 								if (cursorContainer.getNumCursors() == 1) {
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 
@@ -426,7 +425,7 @@ public class DrawingView extends View {
 								if (cursorContainer.getNumCursors() == 0)
 									currentMode = MODE_NEUTRAL;
 							}
-							break;
+							break;*/
 						case MODE_SHAPE_MANIPULATION:
 							if (type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated >= 0) {
 
@@ -462,11 +461,18 @@ public class DrawingView extends View {
 							}
 							break;
                         case MODE_POLYGON_MANIPULATION:
-
-                            Log.d("POLYGON", "INSIDE");
-
                             //Move all shapes that are in the polygon (selectedShapes)
+							if (cursorContainer.getNumCursors() == 1) {
+							for ( Shape s : selectedShapes ) {
+									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 
+									Point2DUtil.translatePointsBasedOnDisplacementOfOnepoint(
+											s.getPoints(),
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition()),
+											gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition())
+									);
+								}
+							}
 
                             cursorContainer.removeAllCursors();
 

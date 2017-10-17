@@ -1,4 +1,6 @@
 package log350.example.example6;
+import android.util.Log;
+
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Comparator;
