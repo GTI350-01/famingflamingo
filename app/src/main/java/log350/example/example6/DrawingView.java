@@ -405,19 +405,24 @@ public class DrawingView extends View {
 									currentMode = MODE_ERASE;
 									cursor.setType(MyCursor.TYPE_BUTTON);
 								}
-								else if (indexOfShapeBeingManipulated >= 0) {
+								else if (indexOfShapeBeingManipulated >= 0 && lassoPolygonPoints == null) {
 									currentMode = MODE_SHAPE_MANIPULATION;
+									cursor.setType(MyCursor.TYPE_DRAGGING);
+								}
+								else if(lassoPolygonPoints != null && Point2DUtil.isPointInsidePolygon(lassoPolygonPoints, p_world)){
+									currentMode = MODE_POLYGON_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
 
 								else {
+									Log.d("OK cam", "onTouch: ");
 									currentMode = MODE_CAMERA_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
 							}
 							break;
 						case MODE_CAMERA_MANIPULATION:
-							/*if (type == MotionEvent.ACTION_MOVE) {
+							if (type == MotionEvent.ACTION_MOVE) {
 								if (cursorContainer.getNumCursors() == 1) {
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 
@@ -442,7 +447,7 @@ public class DrawingView extends View {
 								if (cursorContainer.getNumCursors() == 0)
 									currentMode = MODE_NEUTRAL;
 							}
-							break;*/
+							break;
 						case MODE_SHAPE_MANIPULATION:
 							if (type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated >= 0) {
 								Shape shape = shapeContainer.getShape(indexOfShapeBeingManipulated);
@@ -455,7 +460,7 @@ public class DrawingView extends View {
 											gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition()),
 											gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition())
 									);
-								} /*else if (cursorContainer.getNumCursors() == 2) { // transformation of the shape with 2 fingers
+								} else if (cursorContainer.getNumCursors() == 2) { // transformation of the shape with 2 fingers
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 									MyCursor cursor1 = cursorContainer.getCursorByIndex(1);
 
@@ -466,7 +471,7 @@ public class DrawingView extends View {
 											gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition()),
 											gw.convertPixelsToWorldSpaceUnits(cursor1.getCurrentPosition())
 									);
-								}*/
+								}
 							} else if (type == MotionEvent.ACTION_UP) {
 								cursorContainer.removeCursorByIndex(cursorIndex);
 								if (cursorContainer.getNumCursors() == 0) {
@@ -477,14 +482,15 @@ public class DrawingView extends View {
 							break;
                         case MODE_POLYGON_MANIPULATION:
 							//Move all shapes that are in the polygon (selectedShapes)
-							if (type == MotionEvent.ACTION_MOVE ){
+							Log.d("quelle shape", "" + indexOfShapeBeingManipulated);
+							if (type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated >= 0) {
 								if (cursorContainer.getNumCursors() == 1) {
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 									for ( Shape s : selectedShapes ) {
 										Point2DUtil.translatePointsBasedOnDisplacementOfOnepoint(
 												s.getPoints(),
-												gw.convertWorldSpaceUnitsToPixels(cursor0.getPreviousPosition()),
-												gw.convertWorldSpaceUnitsToPixels(cursor0.getCurrentPosition())
+												gw.convertPixelsToWorldSpaceUnits(cursor0.getPreviousPosition()),
+												gw.convertPixelsToWorldSpaceUnits(cursor0.getCurrentPosition())
 										);
 									}
 								}
@@ -492,6 +498,8 @@ public class DrawingView extends View {
 								cursorContainer.removeCursorByIndex(cursorIndex);
 								if (cursorContainer.getNumCursors() == 0)
 									currentMode = MODE_NEUTRAL;
+								indexOfShapeBeingManipulated = -1;
+								Log.d("ICI", "onTouch: ");
 							}
                             break;
 						case MODE_LASSO:
