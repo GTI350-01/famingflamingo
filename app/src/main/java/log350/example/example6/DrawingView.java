@@ -202,6 +202,9 @@ public class DrawingView extends View {
     static final int MODE_POLYGON_MANIPULATION = 3; // the user is translating/rotating/scaling a shape
 	static final int MODE_LASSO = 4; // the user is drawing a lasso to select shapes
 	static final int MODE_CREATE = 5;
+	static final int MODE_FRAMETOSHAPE = 6;
+	static final int MODE_FRAMETOSCENE = 7;
+	static final int MODE_ERASE = 8;
 	int currentMode = MODE_NEUTRAL;
 
 	// This is only used when currentMode==MODE_SHAPE_MANIPULATION, otherwise it is equal to -1
@@ -209,7 +212,10 @@ public class DrawingView extends View {
 
 	MyButton lassoButton = new MyButton( "Lasso", 10, 70, 140, 140 );
 	MyButton createButton = new MyButton("Create", 10, 220, 140, 140);
-	
+	MyButton frameToShapeButton = new MyButton("Zoom Shape", 10, 370, 140, 140);
+	MyButton frameToSceneButton = new MyButton("AutoZoom", 10, 520, 140, 140);
+	MyButton eraseButton = new MyButton("Erase", 10, 670, 140, 140);
+
 	OnTouchListener touchListener;
     ArrayList<Point2D> lassoPolygonPoints;
 
@@ -282,6 +288,9 @@ public class DrawingView extends View {
 
 		lassoButton.draw( gw, currentMode == MODE_LASSO );
 		createButton.draw( gw, currentMode ==  MODE_CREATE);
+		frameToShapeButton.draw(gw, currentMode == MODE_FRAMETOSHAPE);
+		frameToSceneButton.draw(gw, currentMode == MODE_FRAMETOSCENE);
+		eraseButton.draw(gw, currentMode == MODE_ERASE);
 
 		if ( currentMode == MODE_LASSO ) {
 			MyCursor lassoCursor = cursorContainer.getCursorByType( MyCursor.TYPE_DRAGGING, 0 );
@@ -385,13 +394,18 @@ public class DrawingView extends View {
 									currentMode = MODE_CREATE;
 									cursor.setType(MyCursor.TYPE_BUTTON);
 								}
-								else if(lassoPolygonPoints != null && (Point2DUtil.isPointInsidePolygon(lassoPolygonPoints, p_world) && indexOfShapeBeingManipulated >= -1) ){
-									Log.d("lassoPoly", "" + lassoPolygonPoints);
-									currentMode = MODE_POLYGON_MANIPULATION;
-									cursor.setType(MyCursor.TYPE_DRAGGING);
+								else if (frameToShapeButton.contains(p_pixels)) {
+									currentMode = MODE_FRAMETOSHAPE;
+									cursor.setType(MyCursor.TYPE_BUTTON);
 								}
-								else if (lassoPolygonPoints == null && indexOfShapeBeingManipulated >= -1) {
-									Log.d("lassoPoly out", "" + lassoPolygonPoints);
+								else if (frameToSceneButton.contains(p_pixels)) {
+									currentMode = MODE_FRAMETOSCENE;
+								}
+								else if (eraseButton.contains(p_pixels)) {
+									currentMode = MODE_ERASE;
+									cursor.setType(MyCursor.TYPE_BUTTON);
+								}
+								else if (indexOfShapeBeingManipulated >= 0) {
 									currentMode = MODE_SHAPE_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
@@ -557,6 +571,50 @@ public class DrawingView extends View {
 								}
 							}
 
+							break;
+
+						case MODE_FRAMETOSHAPE:
+							if (type == MotionEvent.ACTION_DOWN) {
+								Point2D p_pixels = new Point2D(x, y);
+								if (frameToShapeButton.contains(p_pixels)) {
+									currentMode = MODE_NEUTRAL;
+									break;
+								}
+
+								Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
+								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+								if (indexOfShapeBeingManipulated != -1) {
+									AlignedRectangle2D targetRect = shapeContainer.getShape(indexOfShapeBeingManipulated).getBoundingRectangle();
+									gw.frame(targetRect, true);
+									indexOfShapeBeingManipulated = -1;
+									currentMode = MODE_NEUTRAL;
+								}
+							}
+							break;
+
+						case MODE_FRAMETOSCENE:
+
+							gw.frame(shapeContainer.getBoundingRectangle(), true);
+							currentMode = MODE_NEUTRAL;
+							break;
+
+						case MODE_ERASE:
+							if (type == MotionEvent.ACTION_DOWN) {
+								Point2D hitPoint = new Point2D(x, y);
+								if (eraseButton.contains(hitPoint)) {
+									currentMode = MODE_NEUTRAL;
+									break;
+								}
+
+								Point2D p_world = gw.convertPixelsToWorldSpaceUnits(hitPoint);
+								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
+								if (indexOfShapeBeingManipulated != -1) {
+									AlignedRectangle2D targetRect = shapeContainer.getShape(indexOfShapeBeingManipulated).getBoundingRectangle();
+									shapeContainer.removeShape(indexOfShapeBeingManipulated);
+									indexOfShapeBeingManipulated = -1;
+									currentMode = MODE_NEUTRAL;
+								}
+							}
 							break;
 					}
 
