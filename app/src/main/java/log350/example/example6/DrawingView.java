@@ -405,14 +405,15 @@ public class DrawingView extends View {
 									currentMode = MODE_ERASE;
 									cursor.setType(MyCursor.TYPE_BUTTON);
 								}
-								else if (indexOfShapeBeingManipulated >= 0 && lassoPolygonPoints == null) {
-									currentMode = MODE_SHAPE_MANIPULATION;
-									cursor.setType(MyCursor.TYPE_DRAGGING);
-								}
-								else if(lassoPolygonPoints != null && Point2DUtil.isPointInsidePolygon(lassoPolygonPoints, p_world)){
+								else if(lassoPolygonPoints != null && selectedShapes.contains(shapeContainer.getShape(shapeContainer.indexOfShapeContainingGivenPoint(p_world)))){
 									currentMode = MODE_POLYGON_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
+								else if (indexOfShapeBeingManipulated >= 0) {
+									currentMode = MODE_SHAPE_MANIPULATION;
+									cursor.setType(MyCursor.TYPE_DRAGGING);
+								}
+
 
 								else {
 									Log.d("OK cam", "onTouch: ");

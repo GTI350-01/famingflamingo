@@ -6,7 +6,10 @@ import java.util.ArrayList;
 class ShapeContainer {
 	public ArrayList< Shape > shapes = new ArrayList< Shape >();
 
-	public Shape getShape( int index ) { return shapes.get(index); }
+	public Shape getShape( int index ) { if(index != -1)
+											return shapes.get(index);
+										 else
+											return null; }
 
 	public void addShape( ArrayList< Point2D > points /* in world space */ ) {
 		Shape s = new Shape( points );
