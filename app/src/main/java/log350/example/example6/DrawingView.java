@@ -292,6 +292,20 @@ public class DrawingView extends View {
 		frameToSceneButton.draw(gw, currentMode == MODE_FRAMETOSCENE);
 		eraseButton.draw(gw, currentMode == MODE_ERASE);
 
+		/*if(lassoPolygonPoints != null && lassoPolygonPoints.size() > 0) {
+			gw.setColor(0.0f, 0.0f, 1f, 0.5f);
+
+			ArrayList<Point2D> w = new ArrayList<Point2D>();
+
+			for(Point2D l : lassoPolygonPoints){
+
+				w.add(gw.convertWorldSpaceUnitsToPixels(l));
+
+			}
+
+			gw.fillPolygon(w);
+		}*/
+
 		if ( currentMode == MODE_LASSO ) {
 			MyCursor lassoCursor = cursorContainer.getCursorByType( MyCursor.TYPE_DRAGGING, 0 );
 			if ( lassoCursor != null ) {
@@ -299,7 +313,6 @@ public class DrawingView extends View {
 				gw.fillPolygon( lassoCursor.getPositions() );
 			}
 		}
-
 
 
 		if ( cursorContainer.getNumCursors() > 0 ) {
@@ -385,6 +398,18 @@ public class DrawingView extends View {
 								Point2D p_world = gw.convertPixelsToWorldSpaceUnits(p_pixels);
 								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
 
+								// Hull
+								ArrayList< Point2D > points = new ArrayList< Point2D >();
+								AlignedRectangle2D rect = new AlignedRectangle2D();
+								for ( Shape s : selectedShapes ) {
+									for ( Point2D p : s.getPoints() ) {
+										points.add( p );
+										rect.bound( p );
+									}
+								}
+								points = Point2DUtil.computeConvexHull( points );
+								points = Point2DUtil.computeExpandedPolygon( points, rect.getDiagonal().length()/30 );
+
                                 //Get polygon points
 
 								if (lassoButton.contains(p_pixels)) {
@@ -405,16 +430,15 @@ public class DrawingView extends View {
 									currentMode = MODE_ERASE;
 									cursor.setType(MyCursor.TYPE_BUTTON);
 								}
-								else if(lassoPolygonPoints != null && selectedShapes.contains(shapeContainer.getShape(shapeContainer.indexOfShapeContainingGivenPoint(p_world)))){
-									currentMode = MODE_POLYGON_MANIPULATION;
-									cursor.setType(MyCursor.TYPE_DRAGGING);
-								}
 								else if (indexOfShapeBeingManipulated >= 0) {
 									currentMode = MODE_SHAPE_MANIPULATION;
 									cursor.setType(MyCursor.TYPE_DRAGGING);
 								}
-
-
+								else if(lassoPolygonPoints != null && Point2DUtil.isPointInsidePolygon(points, p_world)){
+									Log.d("IN HERE", "CLICKED ON POLYGON");
+									currentMode = MODE_POLYGON_MANIPULATION;
+									cursor.setType(MyCursor.TYPE_DRAGGING);
+								}
 								else {
 									Log.d("OK cam", "onTouch: ");
 									currentMode = MODE_CAMERA_MANIPULATION;
@@ -482,9 +506,7 @@ public class DrawingView extends View {
 							}
 							break;
                         case MODE_POLYGON_MANIPULATION:
-							//Move all shapes that are in the polygon (selectedShapes)
-							Log.d("quelle shape", "" + indexOfShapeBeingManipulated);
-							if (type == MotionEvent.ACTION_MOVE && indexOfShapeBeingManipulated >= 0) {
+							if (type == MotionEvent.ACTION_MOVE) {
 								if (cursorContainer.getNumCursors() == 1) {
 									MyCursor cursor0 = cursorContainer.getCursorByIndex(0);
 									for ( Shape s : selectedShapes ) {
@@ -619,6 +641,7 @@ public class DrawingView extends View {
 								indexOfShapeBeingManipulated = shapeContainer.indexOfShapeContainingGivenPoint(p_world);
 								if (indexOfShapeBeingManipulated != -1) {
 									AlignedRectangle2D targetRect = shapeContainer.getShape(indexOfShapeBeingManipulated).getBoundingRectangle();
+									selectedShapes.remove(shapeContainer.getShape(indexOfShapeBeingManipulated));
 									shapeContainer.removeShape(indexOfShapeBeingManipulated);
 									indexOfShapeBeingManipulated = -1;
 									currentMode = MODE_NEUTRAL;
